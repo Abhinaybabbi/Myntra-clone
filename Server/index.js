@@ -31,12 +31,10 @@ mongoose.connect(`${process.env.MongodbServer}`, (err, then) => {
 
 app.get("/", async function (req, res) {
   try {
-    const data = await Data.all();
+    const data = await Data.find({"data.id":1})      
+ 
     return res.json({
-      status: "success",
-      data: {
         data,
-      },
     });
   } catch (e) {
     res.json({
@@ -45,15 +43,28 @@ app.get("/", async function (req, res) {
     });
   }
 });
-app.post("/data",(req,res)=>{
-  const{data}=req.body;
-  const addData = new Data({   data
-    
-  });
-  addData.save().then((addData)=>{
-    res.json({ message: "saved successfully" });
-  })
+app.post("/data",async (req,res)=>{
+  try{
   
+  const data=req.body;
+  await Data.create(data)
+    return res.send({
+      status:"succesfull",
+      data:{
+        data
+      }
+
+    })
+  
+  
+  }catch(e){
+    res.json({
+      status:"failed",
+      message:e.message
+    })
+  }
+  
+    
 })
 
 app.use(express.json());
