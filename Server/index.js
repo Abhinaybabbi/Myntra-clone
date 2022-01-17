@@ -8,12 +8,14 @@ const userRouter = require("./Routes/user");
 
 const requireLogin = require("./middleware/requireLogin");
 const Data = require("./Models/data");
+const Item = require("./Models/item")
 
 
 app.use(bodyParser());
+app.use(express.urlencoded({extended:false}));
 app.use(cors());
-app.use(express.static("./public"))
 app.use(require("./Routes/auth"));
+app.use(require("./Routes/test"));
 
 
 // app.all("*",(req,res)=>{
@@ -29,9 +31,11 @@ mongoose.connect(`${process.env.MongodbServer}`, (err, then) => {
 });
 
 
+
+
 app.get("/", async function (req, res) {
   try {
-    const data = await Data.find({"data.id":1})      
+    const data = await Item.find({})      
  
     return res.json({
         data,
@@ -43,29 +47,82 @@ app.get("/", async function (req, res) {
     });
   }
 });
-app.post("/data",async (req,res)=>{
+app.post("/",async(req,res)=>{
   try{
-  
-  const data=req.body;
-  await Data.create(data)
+    const id=req.body;
+    
+    console.log(id)
+    await Item.findByIdAndDelete({id})
     return res.send({
       status:"succesfull",
-      data:{
-        data
-      }
+      }) 
 
-    })
-  
-  
+
   }catch(e){
     res.json({
       status:"failed",
       message:e.message
     })
+
   }
-  
-    
+
 })
+app.post("/data",async (req,res)=>{
+  try{  
+  const {data}=req.body;
+  console.log(data)
+  await Data.create(data)
+    return res.send({
+      status:"succesfull",
+      data:{
+        data
+      }}) 
+  }catch(e){
+    res.json({
+      status:"failed",
+      message:e.message
+     
+    })}   
+})
+
+app.post("/item",async (req,res)=>{
+  try{
+    
+    const {   category,    description,    id,    image,    price,       title,    } = req.body;
+  
+    const item= new Item({
+      category,
+      description,
+      id,
+      image,
+      price,     
+      title,
+    });
+    item.save()
+      .then((item) => {
+        res.json({ message: "saved successfully",
+      item });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    // await Item.create({data})
+    // return res.send({
+    //   status:"successfull",
+    //   data:{data}
+
+    // })
+  }
+  catch(e){
+    res.json({
+      status:"failed",
+      message:e.message
+
+    })
+  }
+})
+
 
 app.use(express.json());
 app.use(bodyParser.json());
